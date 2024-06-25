@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 import Slide from '@mui/material/Slide';
 import Input from '@mui/material/Input';
@@ -11,6 +11,7 @@ import ClickAwayListener from '@mui/material/ClickAwayListener';
 import { bgBlur } from 'src/theme/css';
 
 import Iconify from 'src/components/iconify';
+import { SearchContext } from 'src/contextprovider/searchquery';
 
 // ----------------------------------------------------------------------
 
@@ -41,7 +42,7 @@ const StyledSearchbar = styled('div')(({ theme }) => ({
 
 export default function Searchbar() {
   const [open, setOpen] = useState(false);
-
+  const {filter,setFilter}=useContext(SearchContext)
   const handleOpen = () => {
     setOpen(!open);
   };
@@ -50,6 +51,10 @@ export default function Searchbar() {
     setOpen(false);
   };
 
+  const handleSearch = (event) => {
+    setFilter(event.target.value);
+  }
+  console.log(filter);
   return (
     <ClickAwayListener onClickAway={handleClose}>
       <div>
@@ -66,6 +71,7 @@ export default function Searchbar() {
               fullWidth
               disableUnderline
               placeholder="Search…"
+              onChange={handleSearch}
               startAdornment={
                 <InputAdornment position="start">
                   <Iconify

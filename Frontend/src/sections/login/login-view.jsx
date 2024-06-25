@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -19,28 +19,93 @@ import { bgGradient } from 'src/theme/css';
 
 import Logo from 'src/components/logo';
 import Iconify from 'src/components/iconify';
+import axios from 'axios';
+import { NavLink, useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 
 // ----------------------------------------------------------------------
 
 export default function LoginView() {
+ 
   const theme = useTheme();
 
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
+ 
+  const navigate=useNavigate() ;
 
-  const handleClick = () => {
-    router.push('/dashboard');
+
+  const [inpVal, setInpVal] = useState({
+    email: '',
+    password: '',
+  });
+  console.log(inpVal);
+
+
+  const setVal = (e) => {
+    const { name, value } = e.target;
+
+    setInpVal(() => ({
+        ...inpVal,
+        [name]: value,
+      }));
+  };
+
+  const validation=async()=>{
+    const {email, password} = inpVal;
+    if(email===""){
+      toast.error("please enter a valid email");
+    }else if(!email.includes("@")){
+      toast.error("please enter a valid email");
+    }else if(password===""){
+      toast.error("please enter a valid password");
+    }else {
+     
+      try {
+        const res = await axios.post('http://localhost:4001/login', {
+          email,
+          password,
+        });
+  
+        const data = await res.data;
+        console.log(data);
+  
+        if (res.status === 201) {  // Assuming the server responds with status 200 for successful login
+          localStorage.setItem('userDataToken', data.token);
+          navigate("/");
+          setInpVal({ ...inpVal, email: "", password: "" });
+          toast.success("Login successful");
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          toast.error("Username or password incorrect");
+        } else {
+          console.error("An error occurred:", error);
+          toast.error("An unexpected error occurred. Please try again later.");
+        }
+      }
+    }
+  
+  }
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    validation();
+    
+    // router.push('/');
   };
 
   const renderForm = (
     <>
       <Stack spacing={3}>
-        <TextField name="email" label="Email address" />
+        <TextField name="email" label="Email address" value={inpVal.email}  onChange={setVal} />
 
         <TextField
           name="password"
           label="Password"
+          onChange={setVal}
+          value={inpVal.password}
           type={showPassword ? 'text' : 'password'}
           InputProps={{
             endAdornment: (
@@ -83,6 +148,7 @@ export default function LoginView() {
         height: 1,
       }}
     >
+      <Toaster/>
       <Logo
         sx={{
           position: 'fixed',
@@ -103,13 +169,14 @@ export default function LoginView() {
 
           <Typography variant="body2" sx={{ mt: 2, mb: 5 }}>
             Don’t have an account?
-            <Link variant="subtitle2" sx={{ ml: 0.5 }}>
-              Get started
-            </Link>
+           <NavLink to="/register" sx={{ ml: 0.5 }}>
+             Get started
+            
+            </NavLink>
           </Typography>
 
           <Stack direction="row" spacing={2}>
-            <Button
+            {/* <Button
               fullWidth
               size="large"
               color="inherit"
@@ -137,14 +204,14 @@ export default function LoginView() {
               sx={{ borderColor: alpha(theme.palette.grey[500], 0.16) }}
             >
               <Iconify icon="eva:twitter-fill" color="#1C9CEA" />
-            </Button>
+            </Button> */}
           </Stack>
 
-          <Divider sx={{ my: 3 }}>
+          {/* <Divider sx={{ my: 3 }}>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               OR
             </Typography>
-          </Divider>
+          </Divider> */}
 
           {renderForm}
         </Card>

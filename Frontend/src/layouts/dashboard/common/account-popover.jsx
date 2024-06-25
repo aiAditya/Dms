@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
@@ -10,8 +10,13 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 
 import { account } from 'src/_mock/account';
-import { ListItemButton } from '@mui/material';
+import { ListItemButton, filledInputClasses } from '@mui/material';
 
+
+import PropTypes from 'prop-types';
+import axios from 'axios';
+import { mainContext } from 'src/contextprovider/Context';
+import { useNavigate } from 'react-router-dom';
 // ----------------------------------------------------------------------
 
 const MENU_OPTIONS = [
@@ -31,17 +36,58 @@ const MENU_OPTIONS = [
 
 // ----------------------------------------------------------------------
 
-export default function AccountPopover() {
+export default function AccountPopover({ loginData }) {
   const [open, setOpen] = useState(null);
-
+  const navigate=useNavigate();
   const handleOpen = (event) => {
     setOpen(event.currentTarget);
   };
+  const {setLoginData} = useContext(mainContext);
+  const logoutuser = async () => {
+    const token =  localStorage.getItem("userDataToken");
+    console.log(token);
+    try {
+      const response=await axios.get("http://localhost:4001/logout",{
+       
+      headers:{  'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        Accept: 'application/json'
+       },
+      credentials:"include"
 
+      })
+      const data=await response.data;
+      console.log(data);
+      if(response.status ===201 ){
+        console.log("user logout")
+        localStorage.removeItem("userDataToken");
+        setLoginData(false)
+        navigate("login")
+      }else{
+        console.log("data is not found")
+       
+      }
+
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleLogout=()=>{
+    logoutuser();
+    setOpen(null);
+  }
   const handleClose = () => {
+    
     setOpen(null);
   };
+  const handleProfile=(index)=>{
+    if(index===1){
+      navigate("/profile");  
+    }
+    setOpen(null);
 
+  }
   return (
     <>
       <IconButton
@@ -86,17 +132,17 @@ export default function AccountPopover() {
       >
         <Box sx={{ my: 1.5, px: 2 }}>
           <Typography variant="subtitle2" noWrap>
-            {account.displayName}
+            {loginData.fname}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {account.email}
+            {loginData.email}
           </Typography>
         </Box>
 
         <Divider sx={{ borderStyle: 'dashed' }} />
 
-        {MENU_OPTIONS.map((option) => (
-          <MenuItem key={option.label} onClick={handleClose}>
+        {MENU_OPTIONS.map((option,index) => (
+          <MenuItem key={option.label} onClick={()=>{handleProfile(index);handleClose()}}>
             {option.label}
           </MenuItem>
         ))}
@@ -106,9 +152,9 @@ export default function AccountPopover() {
         <ListItemButton
           disableRipple
           disableTouchRipple
-          onClick={handleClose}
+          onClick={handleLogout}
           sx={{ typography: 'body2', color: 'error.main', py: 1.5 }}
-          href="/login"
+          
         >
           Logout
         </ListItemButton>
@@ -116,3 +162,6 @@ export default function AccountPopover() {
     </>
   );
 }
+AccountPopover.propTypes = {
+  loginData: PropTypes.object,
+};

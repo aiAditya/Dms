@@ -10,27 +10,41 @@ import Typography from '@mui/material/Typography';
 import Iconify from 'src/components/iconify';
 // import { HighlightedCode } from '@mui/docs/HighlightedCode';
 import { useEffect, useState } from 'react';
-import Cardmenu from '../card-create';
 import axios from 'axios';
+import toast, { Toaster } from 'react-hot-toast';
+import { DNA } from 'react-loader-spinner';
+import Loader from 'src/layouts/dashboard/common/loader';
 // ----------------------------------------------------------------------
 
 
 
 export default function AppView() {
   const [itemData, setItemData] = useState([]);
+  const [loading, setLoading] = useState(true);
  useEffect(()=>{
-  countData();
- },[]);
+  setTimeout(() => {
+    countData();
+    // setLoading(false);
+  }, 1000);
+  },[]);
+  
+  
 
 
+  
   const countData=async()=>{
     try{
+      
     const countValue=await axios.get("http://localhost:4001/api/value")
     console.log(countValue.data);
     setItemData(countValue.data);
+  
+
     }
     catch(error){
       console.error("Error getting value")
+    }finally{
+      setLoading(false);
     }
   }
   const data1 = [
@@ -51,6 +65,7 @@ export default function AppView() {
   ];
   return (
     <Container maxWidth="xl">
+      <Toaster/>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -59,10 +74,15 @@ export default function AppView() {
       >
         <Typography variant="h4">Dashboard 👋</Typography>
       </Stack>
-     <Card>
+     {loading?
+     (<Loader />)
+      :
+      (<Card>
      <Grid container >
       <Grid item xs={12} sm ={6} lg={12}>
         <Box component="div" sx={{display:"flex"}}>
+       
+  
         <PieChart series={series} width={600} height={600} 
         // onItemClick={
         //   (event,d)=> {setItemData(d);console.log(d)}}
@@ -75,7 +95,7 @@ export default function AppView() {
           /></Box>
       </Grid>
   
-     </Grid></Card>
+     </Grid></Card>)}
     </Container>
   );
 }

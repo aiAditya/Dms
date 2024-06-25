@@ -1,0 +1,28 @@
+/* navigation.css */
+
+nav {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  
+  nav span {
+    margin-right: 5px;
+    
+    
+  }
+  
+  nav span:last-child {
+    margin-right: 0;
+  }
+  
+  nav a {
+    color: #007bff; /* Blue color for links */
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  nav a:hover {
+    color: #0056b3; /* Darker blue on hover */
+  }
+  

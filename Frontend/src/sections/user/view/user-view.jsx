@@ -1,6 +1,5 @@
-import {  useEffect, useMemo, useState } from 'react';
-import Link from '@mui/material/Link';
-import Card from '@mui/material/Card';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useContext, useEffect, useMemo, useState } from 'react';
 import Stack from '@mui/material/Stack';
 
 import Button from '@mui/material/Button';
@@ -17,19 +16,18 @@ import FormControl from '@mui/material/FormControl';
 import Iconify from 'src/components/iconify';
 import { Box, Dialog, FormLabel, Grid, Popover, Radio, TextField } from '@mui/material';
 import Scrollbar from 'src/components/scrollbar';
-
-import Filecard from '../new-card';
-
 import styled from '@emotion/styled';
-import { Outlet, Route, Routes, useLocation, useParams , useNavigate} from 'react-router-dom';
+import { Outlet, Route, Routes, useLocation, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast, { Toaster } from 'react-hot-toast';
 import Subfolder from '../subfolderpage/subfolder';
 import Folder from '../Folder/Folder';
 import Breadcrumb from '../breadcrumb/Breadcrumb';
 
+// eslint-disable-next-line import/order
+import { SearchContext } from 'src/contextprovider/searchquery';
 
 // ----------------------------------------------------------------------
-
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -46,49 +44,63 @@ const VisuallyHiddenInput = styled('input')({
 export default function UserPage() {
 
 
-  // const history = useNavigate();
-
   const [currentPath, setCurrentPath] = useState([]);
-  const [pathName,setPathName]= useState({title:"Root",newId:null})
+  const [pathName, setPathName] = useState({ title: 'Root', newId: null });
   const [value, setValue] = useState('folder');
   const [descData, setDescData] = useState('');
   const [fileData, setFileData] = useState('');
-  const [currentFolderId, setCurrentFolderId] = useState("");
-  const [folders, setFolder] = useState([])
+  const [currentFolderId, setCurrentFolderId] = useState('');
+  const [folders, setFolder] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const [isChecked, setIsChecked] = useState(false)
   const [anchorEl, setAnchorEl] = useState(null);
-  
-  useEffect(()=>{
-    let pathNameAdded = false;
+ const {filter}=useContext(SearchContext);
+ const [filterFolders, setFilterFolders] = useState([]);
+ 
+  useEffect(() => {
+    
+
     const fetchData = async () => {
       const data = await fetchDataByParentId(currentFolderId);
       setFolder(data);
-      if (!currentPath.includes(pathName) && !pathNameAdded) {
-        setCurrentPath((current) => [...current, pathName]);
-        pathNameAdded = true; // Mark pathName as added
-      }
+      
       // console.log(currentPath,"currentPath")
       // console.log(currentFolderId,"currentFolderId");
-      
-    }
-    fetchData(); 
-    console.log("render")
-  },[currentFolderId,location,pathName,currentPath]);
-
+    };
+    
+      fetchData();
+    
+    console.log('render');
+  }, [currentFolderId, location, pathName, currentPath]);
 
   useEffect(() => {
-    console.log(currentPath, "currentPath of this useEffect");
+    console.log(currentPath, 'currentPath of this useEffect');
   }, [currentPath]);
-  
-  
-  const handleFileData =(e)=>{
-  setFileData(e.target.value);
-  
-  } 
+ 
+
+ useEffect(()=>{
+  let pathNameAdded = false;
+  if (!currentPath.includes(pathName) && !pathNameAdded) {
+    setCurrentPath((current) => [...current, pathName]);
+    pathNameAdded = true; // Mark pathName as added
+  }
+ },[pathName])
+
+useEffect(()=>{
+  const filtered = folders.filter(folder =>
+    folder.name.toLowerCase().includes(filter.toLowerCase())
+  );
+  setFilterFolders(filtered);
+
+},[filter,folders])
+
+
+  const handleFileData = (e) => {
+    setFileData(e.target.value);
+  };
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
+   
     console.log(anchorEl);
   };
   const handleClose = (event) => {
@@ -98,50 +110,39 @@ export default function UserPage() {
     setValue(e.target.value);
   };
 
-
-  
-  const handlePathClick = (index,paths) => {
-    console.log(currentPath,"oldCurrentPath")
-    if (index === 0) {
-      setCurrentPath([currentPath[0]]);
-      console.log(currentPath,"kya hsi yerter");
-  } else {
+  const handlePathClick = (index, paths) => {
+    console.log(currentPath, index, 'oldCurrentPath');
+    // if (index === 0) {
+    //   setCurrentFolderId(null);
+    //   console.log(currentPath, 'hello world');
+    // } else {
       // Create a new array by slicing the currentPath array
       const newPath = currentPath.slice(0, index + 1);
-      console.log(newPath, "new currentPath");
-      
+      console.log(newPath, 'new currentPath');
+
       // Update state with the new array
       setCurrentPath(newPath);
-  }
-    setCurrentFolderId(paths.newId);
+      setCurrentFolderId(newPath[index].newId);
+      navigate(`/roots/${newPath[index].newId}`);
+    
   };
 
+  // console.log(currentPath, "currentPath of the current path");
 
-    
-
-// console.log(currentPath, "currentPath of the current path");
-
-
-
-
-const fetchDataByParentId = async (folderId) => {
-  try {
-    const response = await axios.get('http://localhost:4001/api/folders', {
-      params: {
-        parentId: folderId,
-      }
-      
-    });
-    // console.log("response after data fetch",response.data);
-    return response.data;
-
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    return [];
-  }
-  
-};
-
+  const fetchDataByParentId = async (folderId) => {
+    try {
+      const response = await axios.get('http://localhost:4001/api/folders', {
+        params: {
+          parentId: folderId,
+        },
+      });
+      // console.log("response after data fetch",response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      return [];
+    }
+  };
 
   const url = 'http://localhost:4001/api/data';
 
@@ -152,12 +153,12 @@ const fetchDataByParentId = async (folderId) => {
       types: value,
       // descriptionOfFile: descData,
       // path: location.pathname,
-      parentId:currentFolderId
+      parentId: currentFolderId,
     };
     console.log(data);
     try {
       const response = await axios.post(url, data);
-     
+
       console.log(response.data);
       console.log(location.pathname); // Handle the response data as needed
     } catch (error) {
@@ -166,110 +167,84 @@ const fetchDataByParentId = async (folderId) => {
     handleClose();
     const data1 = await fetchDataByParentId(currentFolderId);
     setFolder(data1);
-    setFileData("");
-    setDescData("");
+    setFileData('');
+    setDescData('');
+    toast.success("folder successfully created");
   };
 
-
-
-
-
-
-const deleteData=async(folderId)=>{
-  console.log("deleteData",folderId)
-  try{
-const response=await axios.delete("http://localhost:4001/api/deletes",{
-    params:{id:folderId}
-  })
-  console.log(response.data);
-     
-}
-catch (error) {
-  console.error('Error deleting data:', error)
-}
-const data1 = await fetchDataByParentId(currentFolderId);
-    setFolder(data1);
-};
-
-
-// file favorite folder
- const updateFavorites=async(folderId)=>{
- try{
-  const response=await axios.put(`http://localhost:4001/api/${folderId}/favorite`)
-   console.log(response.data);
-
-
- }catch (error) {
-  console.error('Error updating favorites:', error)
- }
- const data1 = await fetchDataByParentId(currentFolderId);
- setFolder(data1);
- };
-
-
-
-
-// file upload function for uploading files
-
-const handleFileUpload = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('parentId', currentFolderId);
-
-  try {
-    await axios.post('http://localhost:4001/api/upload-file', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+  const deleteData = async (folderId) => {
+    console.log('deleteData', folderId);
+    try {
+      const response = await axios.delete('http://localhost:4001/api/deletes', {
+        params: { id: folderId },
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.error('Error deleting data:', error);
+    }
     const data1 = await fetchDataByParentId(currentFolderId);
     setFolder(data1);
-  } catch (error) {
-    console.error('Error uploading file', error);
-  }
-  // handleClose();
-};
+    toast.success("folder deleted successfully ");
+    
+  };
 
+  // file favorite folder
+  const updateFavorites = async (folderId) => {
+    try {
+      const response = await axios.put(`http://localhost:4001/api/${folderId}/favorite`);
+      console.log(response.data);
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
+    const data1 = await fetchDataByParentId(currentFolderId);
+    setFolder(data1);
+    toast.success("favorite folder successfully")
+  };
 
-const handleFileChange=(e)=>{
-handleFileUpload(e.target.files[0]);
-console.log("changed file", e.target.files[0]);
-handleClose(); //
-}
+  // file upload function for uploading files
 
+  const handleFileUpload = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('parentId', currentFolderId);
 
-const handleOpenFile = (newUrl) => {
-  window.open(newUrl, '_blank');
-};
+    try {
+      await axios.post('http://localhost:4001/api/upload-file', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const data1 = await fetchDataByParentId(currentFolderId);
+      setFolder(data1);
+    } catch (error) {
+      console.error('Error uploading file', error);
+    }
+    // handleClose();
+  };
 
+  const handleFileChange = (e) => {
+    handleFileUpload(e.target.files[0]);
+    console.log('changed file', e.target.files[0]);
+    handleClose(); //
+    toast.success("File Uploaded Successfully");
+  };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  const handleOpenFile = (newUrl) => {
+    window.open(newUrl, '_blank');
+  };
 
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
 
   return (
-    
     <Container maxWidth="xl">
+      <Toaster position="top-right"
+  reverseOrder={false}/>
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
         sx={{ mb: 5, mt: 2 }}
       >
-      <Breadcrumb path={currentPath} handlePathClick={handlePathClick}/>
+        <Breadcrumb path={currentPath} handlePathClick={handlePathClick} />
         {/* <Typography variant="h4">{pathName} </Typography> */}
         <Stack direction="row" spacing={2}>
           <Button
@@ -319,7 +294,6 @@ const handleOpenFile = (newUrl) => {
                       label="Name of file"
                       fullWidth="true"
                       onChange={handleFileData}
-                      
                       value={fileData}
                     />
                     <br />
@@ -338,7 +312,7 @@ const handleOpenFile = (newUrl) => {
                         setDescData(e.target.value);
                       }}
                     />
-                    <Button variant="outlined" sx={{ mt: 2 }} onClick={handleSubmit}   >
+                    <Button variant="outlined" sx={{ mt: 2 }} onClick={handleSubmit}>
                       Submit
                     </Button>
                   </Box>
@@ -350,10 +324,9 @@ const handleOpenFile = (newUrl) => {
                       variant="contained"
                       tabIndex={-1}
                       startIcon={<Iconify icon="eva:upload-fill" />}
-                    
                     >
                       Upload file
-                      <VisuallyHiddenInput type="file" onChange={handleFileChange}/>
+                      <VisuallyHiddenInput type="file" onChange={handleFileChange} />
                     </Button>
                   </Box>
                 )}
@@ -363,20 +336,25 @@ const handleOpenFile = (newUrl) => {
         </Stack>
       </Stack>
       {/* <Outlet/> */}
-     <Routes>
-      {/* <Route  path="" element={ <Subfolder folders={folders} handleOpenFile={handleOpenFile} setCurrentFolderId={setCurrentFolderId} deleteData={deleteData}/>}/> */}
-      <Route path={`:${currentFolderId}?`}  element={<Subfolder folders={folders} handleOpenFile={handleOpenFile} setPath={setPathName} updateFavorites={updateFavorites} setCurrentFolderId={setCurrentFolderId} deleteData={deleteData}/> }/>
-       </Routes>
-
-      
+      <Routes>
+        {/* <Route  path="" element={ <Subfolder folders={folders} handleOpenFile={handleOpenFile} setCurrentFolderId={setCurrentFolderId} deleteData={deleteData}/>}/> */}
+        <Route
+          path={`:${currentFolderId}?`}
+          element={
+            <Subfolder
+              filterFolders={filterFolders}
+              folders={folders}
+              handleOpenFile={handleOpenFile}
+              setPath={setPathName}
+              updateFavorites={updateFavorites}
+              setCurrentFolderId={setCurrentFolderId}
+              deleteData={deleteData}
+             
+            />
+          }
+        />
+      </Routes>
     </Container>
-    
   );
 }
 
-// {/* // <Grid item xs={12} sm={6} md={3} key={folder._id}>
-// //   <Link href={`/roots/${folderName[0]}`}>
-// //     {' '}
-// //     <Filecard title="new" />
-// //   </Link>
-// // </Grid> */}

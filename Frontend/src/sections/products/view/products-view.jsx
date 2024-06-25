@@ -7,27 +7,14 @@ import { Box, Button, Card, Checkbox, Dialog, Popover, Table, TableContainer, Ta
 import Iconify from 'src/components/iconify';
 import styled from '@emotion/styled';
 import Scrollbar from 'src/components/scrollbar';
-import TableData from '../table-data';
-import axios from 'axios';
 
-const columns = [
-  {
-    id: "Name",
-    headerName: "Name",
-  },
-  {
-    id: "Owner",
-    headerName: "Type",
-  },
-  {
-    id: "File Size",
-    headerName: "Path",
-  },
-  {
-    id: " ",
-    headerName: " ",
-  }
-];
+import axios from 'axios';
+import Filecard from 'src/sections/user/new-card';
+import ProductCard from '../productcard';
+// eslint-disable-next-line import/order
+import toast, { Toaster } from 'react-hot-toast';
+
+
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -42,19 +29,11 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 export default function ProductsView() {
-  const [page, setPage] = useState(0);
-  const [rowPerPage, setRowPerPage] = useState(5);
+  
   const [data, setData] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  }
-
-  const handleRowPerPageChange = (event) => {
-    setPage(0);
-    setRowPerPage(parseInt(event.target.value, 10));
-  }
+ 
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -67,7 +46,7 @@ export default function ProductsView() {
   useEffect(() => {
     fetchData();
   }, [])
-
+ 
   const fetchData = async () => {
     try {
       const response = await axios.get("http://localhost:4001/api/favorites")
@@ -76,12 +55,52 @@ export default function ProductsView() {
       console.error(e);
     }
   }
+  const deleteData=async(folderId)=>{
+  try {
+    const response = await axios.delete('http://localhost:4001/api/deletes', {
+      params: { id: folderId },
+    });
+      toast.success("data deleted successfully")
+     console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+ await fetchData();
+  }
+
+ const updateData=async(folderId)=>{
+  try{
+  const response =await axios.put(`http://localhost:4001/api/${folderId}/favorite`)
+  console.log(response.data);
+  
+}catch(error){
+  console.error(error);
+}
+toast.success("Item unfavorite successfully")
+  fetchData();
+ }
+
+ const newData=async(folderId)=>{
+  console.log(folderId);
+  try{
+   const response= await axios.get("http://localhost:4001/api/folders",{
+      params: { parentId: folderId }
+    })
+    setData(response.data)
+  }catch(err){
+    console.log(err)
+  }
+ };
+ const handleFavoriteOpenFile = (newUrl) => {
+  window.open(newUrl, '_blank');
+};
 
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
 
   return (
     <Container maxWidth="xl">
+      <div><Toaster/></div>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -89,7 +108,7 @@ export default function ProductsView() {
         sx={{ mb: 5, mt: 2 }}
       >
         <Typography variant="h4">Starred 👋</Typography>
-        <Stack direction="row" spacing={2}>
+        {/* <Stack direction="row" spacing={2}>
           <Button
             aria-describedby={id}
             variant="contained"
@@ -136,36 +155,32 @@ export default function ProductsView() {
             Upload file
             <VisuallyHiddenInput type="file" />
           </Button>
-        </Stack>
+        </Stack> */}
       </Stack>
-      <Card>
-        <Scrollbar>
-          <TableContainer sx={{ overflow: 'unset' }}>
-            <Table sx={{ minWidth: 800 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell padding="checkbox"><Checkbox /></TableCell>
-                  {columns.map((name) => (
-                    <TableCell key={name.id}><Typography variant="h6">{name.headerName}</Typography></TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              {data && data.map((data1) => (
-                <TableData key={data1._id} id={data1._id} name={data1.name} owner={data1.type} size={data1.path} />
-              ))}
-            </Table>
-          </TableContainer>
-          <TablePagination
-            component="div"
-            count={data.length}
-            rowsPerPage={rowPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPageOptions={[5, 10, 25]}
-            onRowsPerPageChange={handleRowPerPageChange}
-          />
-        </Scrollbar>
-      </Card>
+      
+        
+         
+          <Grid container spacing={3} mt={2}>
+        
+        {data && data.map((data1) => 
+        <Grid item xs={12} sm={6} md={3} key={data1._id}>
+           <ProductCard id={data1._id} title={data1.name}
+            owner={data1.type} path={data1.path} value={data1.type}
+            url={data1.url}
+            isFavorite={data1.isFavorite}
+            deleteData={deleteData}
+            updateData={updateData}
+            favoriteUrl={data1.url}
+            newData={newData}
+            handleFavoriteOpenFile={handleFavoriteOpenFile} 
+             />
+            </Grid>
+        )}
+  
+  
+        </Grid>
+        
+      
     </Container>
   );
 }

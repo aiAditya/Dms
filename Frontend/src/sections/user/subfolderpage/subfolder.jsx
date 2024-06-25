@@ -1,8 +1,10 @@
 import PropTypes from "prop-types";
 
 import { Grid } from "@mui/material";
+
 import Filecard from "../new-card";
-export default function Subfolder({folders,setCurrentFolderId,deleteData,handleOpenFile,setPath,updateFavorites}){
+
+export default function Subfolder({folders,filterFolders,setCurrentFolderId,deleteData,handleOpenFile,setPath,updateFavorites}){
 
     const handleDeleteFolder = async (folderId) => {
         // Call deleteData function with folder ID
@@ -20,7 +22,7 @@ export default function Subfolder({folders,setCurrentFolderId,deleteData,handleO
     return (
         <Grid container spacing={3} mt={2}>
         
-        {folders.map((folder) => 
+        {filterFolders.map((folder) => 
         <Grid item xs={12} sm={6} md={3} key={folder._id}>
            <Filecard title={folder.name} id={folder._id} setPath={handlePath} isFavorite={folder.isFavorite} updateFavorites={handleFavorites} onSetUrl={handleOpenFileData} onDelete={handleDeleteFolder} url={folder.url} value={folder.type}  handleCurrentFolderId={()=>{setCurrentFolderId(folder._id);}} />
             </Grid>
@@ -37,6 +39,7 @@ Subfolder.propTypes={
     deleteData: PropTypes.func,
     handleOpenFile: PropTypes.func,
     setPath: PropTypes.func,
+    filterFolders: PropTypes.array,
     // value:PropTypes.string,
     
 }

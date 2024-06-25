@@ -4,13 +4,17 @@ const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const multer=require("multer");
+const bcrypt=require("bcryptjs");
+const cookieParser=require("cookie-parser")
 const { Types } = mongoose;
+const authenticate = require("./authenticate")
 const cors = require("cors");
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 const File = require("./model/model.js");
-
+const userDb=require("./model/user.mode.js")
 dotenv.config();
 
 const port = process.env.PORT || 3000;
@@ -66,6 +70,119 @@ const populateContent = async (folder) => {
   await Promise.all(folder.content.map(populateContent));
   return folder;
 };
+// log in api
+app.post("/register",async(req,res)=>{
+  const {fname,email,password,cpassword}=req.body;
+ 
+  if(!fname || !email || !password || !cpassword){
+    res.status(422).json({message:"invalid data"})
+  }
+  try{
+    const preuser=await userDb.findOne({email:email})
+    if(preuser){
+      res.status(422).json({error:"this user already exits"})
+    }else if(password !=cpassword){
+      res.status(422).json({error:"password is not matching"})
+    }else{
+      const finalUser=new userDb({
+        fname,email,password,cpassword
+      })
+      await finalUser.save();
+      console.log(finalUser)
+      res.status(201).json(finalUser)
+    }
+  }catch(err){
+    res.status(500).json({err:err.message}) 
+  }
+})
+
+app.post('/login', async (req, res) => {
+  console.log(req.body);
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  try {
+    const userFound = await userDb.findOne({ email: email });
+    if (!userFound) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(password, userFound.password);
+    if (!isMatch) {
+      return res.status(401).json({status:401, message: "Incorrect username or password" });
+    }
+
+    // Token generation for authentication
+    const token = await userFound.generateToken();
+
+    // Cookies generation for sending token to authorized user
+    res.cookie("userCookies", token, {
+      expires: new Date(Date.now() + 900000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production'
+    });
+
+    // Send results that contain the user and token to front end
+    const result = {
+      user: userFound,
+      token
+    };
+    
+    return res.status(201).json(result);
+  } catch (err) {
+    console.error('Error during login:', err);
+    return res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+});
+app.get("/validuser",authenticate,async(req,res) => {
+ try {
+  const validUser=await userDb.findOne({_id:req.userId});
+  console.log(validUser)
+  res.status(201).json(validUser);
+
+ } catch (error) {
+  res.status(401).json({message:error.message});
+ }
+})
+
+app.get("/logout",authenticate,async (req,res) => {
+  try{
+    req.rootuser.tokens=req.rootuser.tokens.filter((curr)=>{
+      return curr.token!==req.token
+    })
+    res.clearCookie("userCookies",{path:"/"});
+    req.rootuser.save();
+    res.status(201).json()
+  }catch (e) {
+    res.status(401).json({message: e.message})
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 app.get("/api/folders", async (req, res) => {
   const {parentId}=req.query;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 import Box from '@mui/material/Box';
@@ -22,10 +22,13 @@ import Scrollbar from 'src/components/scrollbar';
 
 import { NAV } from './config-layout';
 import navConfig from './config-navigation';
+import { mainContext } from 'src/contextprovider/Context';
 
 // ----------------------------------------------------------------------
 
-export default function Nav({ openNav, onCloseNav }) {
+export default function Nav({ openNav, onCloseNav ,loginData}) {
+  // const {loginData} = useContext(mainContext);
+  // console.log(loginData.email,"of navbar")
   const pathname = usePathname();
 
   const upLg = useResponsive('up', 'lg');
@@ -53,7 +56,7 @@ export default function Nav({ openNav, onCloseNav }) {
       <Avatar src={account.photoURL} alt="photoURL" />
 
       <Box sx={{ ml: 2 }}>
-        <Typography variant="subtitle2">{account.displayName}</Typography>
+        <Typography variant="subtitle2">{loginData.fname}</Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {account.role}
@@ -160,6 +163,7 @@ export default function Nav({ openNav, onCloseNav }) {
 Nav.propTypes = {
   openNav: PropTypes.bool,
   onCloseNav: PropTypes.func,
+  loginData:PropTypes.object
 };
 
 // ----------------------------------------------------------------------

@@ -1,8 +1,11 @@
-import { lazy, Suspense } from 'react';
-import { Outlet, Navigate, useRoutes } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { Outlet, Navigate, useRoutes, useLocation } from 'react-router-dom';
 
 import DashboardLayout from 'src/layouts/dashboard';
+import Loader from 'src/layouts/dashboard/common/loader';
+import SignupPage from 'src/sections/login/signup';
 import Folder from 'src/sections/user/Folder/Folder';
+import Profile from 'src/sections/user/profile/profile';
 
 export const IndexPage = lazy(() => import('src/pages/app'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
@@ -14,11 +17,13 @@ export const Page404 = lazy(() => import('src/pages/page-not-found'));
 // ----------------------------------------------------------------------
 
 export default function Router() {
+  
+
   const routes = useRoutes([
     {
       element: (
         <DashboardLayout>
-          <Suspense>
+          <Suspense  fallback={<Loader />}>
             <Outlet />
           </Suspense>
         </DashboardLayout>
@@ -27,8 +32,12 @@ export default function Router() {
         { element: <IndexPage />, index: true },
         { path: 'roots/*', element: <UserPage />,
          },
-        { path: 'starred', element: <ProductsPage /> },
-        // {path:'/roots/:folderName?', element :<UserPage/>}
+        { path: 'starred/*', element: <ProductsPage /> },
+        {
+          path:'profile',
+          element:<Profile />,
+        },
+       
       ],
     },
     {
@@ -39,6 +48,11 @@ export default function Router() {
       path: '404',
       element: <Page404 />,
     },
+    {
+      path:'register',
+      element:<SignupPage />,
+    },
+    
     {
       path: '*',
       element: <Navigate to="/404" replace />,

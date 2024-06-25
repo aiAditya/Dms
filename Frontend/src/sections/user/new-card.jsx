@@ -1,11 +1,13 @@
 import { Box, Card, Checkbox, IconButton, MenuItem, Popover, Stack, Typography } from '@mui/material'
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types'
 
+// eslint-disable-next-line import/no-absolute-path
 import folder from '/assets/images/open-folder.png';
 import Iconify from 'src/components/iconify';
 import { Link } from 'react-router-dom';
-import file from '/assets/images/file.jpg'
+// import file from '/assets/images/file.jpg'
+
 
 
 
@@ -14,6 +16,8 @@ export default function Filecard( {title,handleCurrentFolderId,deleteFolder,id,o
 const [open,setOpen]=useState(null)
 const [close,setClose]=useState(false)
 const [isChecked,setIsChecked]=useState(false)
+
+
 
 const handleChange=(e)=>{
 setIsChecked(e.target.checked);
@@ -30,12 +34,13 @@ const handleClick=(event)=>{
   console.log("deleted")
   
 }
-const deleteButton=()=>{
+const deleteButton=async()=>{
   onDelete(id)
   setOpen(null)
 }
 
 const handleUrl=()=>{
+  
   onSetUrl(url)
   setPath(title)
 }
@@ -60,7 +65,7 @@ const handleUrl=()=>{
           <Link to={`/roots/${id}`} onClick={()=>{handleCurrentFolderId();setPath({title,newId:id}) ;console.log(title)}}>
              <img src={folder} alt='folder' width={64} height={64} /></Link> 
            ) :(
-            <Box sx={{cursor:"pointer"}}onClick={handleUrl}> <img src={file} alt='file' width={64} height={64} /></Box>
+            <Box sx={{cursor:"pointer"}}onClick={handleUrl}> <img src={`/assets/images/${url.split(".")[1]}.png`} alt='file' width={64} height={64} /></Box>
            )
             }
           <Typography variant="sub-variant">{title}
