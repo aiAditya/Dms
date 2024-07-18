@@ -26,6 +26,7 @@ import Breadcrumb from '../breadcrumb/Breadcrumb';
 
 // eslint-disable-next-line import/order
 import { SearchContext } from 'src/contextprovider/searchquery';
+import { useRouter } from 'src/routes/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -56,6 +57,7 @@ export default function UserPage() {
   const [anchorEl, setAnchorEl] = useState(null);
  const {filter}=useContext(SearchContext);
  const [filterFolders, setFilterFolders] = useState([]);
+ const router=useRouter();
  
   useEffect(() => {
     
@@ -123,7 +125,11 @@ useEffect(()=>{
       // Update state with the new array
       setCurrentPath(newPath);
       setCurrentFolderId(newPath[index].newId);
-      navigate(`/roots/${newPath[index].newId}`);
+      // console.log(newPath[index].newId,"path id");
+      // if(newPath && newPath[index]&& newPath[index].newId){
+      //  navigate(`roots`);
+      // }
+      // navigate(-1)
     
   };
 
@@ -349,7 +355,6 @@ useEffect(()=>{
               updateFavorites={updateFavorites}
               setCurrentFolderId={setCurrentFolderId}
               deleteData={deleteData}
-             
             />
           }
         />

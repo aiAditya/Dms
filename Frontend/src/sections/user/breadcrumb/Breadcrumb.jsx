@@ -9,7 +9,7 @@ export default function Breadcrumb({path,handlePathClick}){
         <nav>
           {path.map((paths, index) => (
             <span key={index}>
-              <Link to="#" onClick={()=>{handlePathClick(index,paths);console.log(paths)}}><Typography variant="h6">{`${paths.title}`} </Typography></Link>
+              <Link to="#" onClick={()=>{handlePathClick(index,paths);console.log(paths)}}>{`${paths.title}`} </Link>
               {index < path.length - 1 && ' / '}
             </span>
           ))}

@@ -162,28 +162,6 @@ app.get("/logout",authenticate,async (req,res) => {
 })
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 app.get("/api/folders", async (req, res) => {
   const {parentId}=req.query;
   console.log(parentId);
